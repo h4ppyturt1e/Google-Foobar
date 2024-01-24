@@ -1,4 +1,5 @@
 from time import time
+from sys import setrecursionlimit
 """
 Operations:
 1) Add one fuel pellet
@@ -16,6 +17,7 @@ Operations:
 def solution(n):
     global memoDict
     memoDict = dict()
+    setrecursionlimit(10 ** 6)
     return recurse(int(n), memoDict)
 
 def recurse(n, memoDict):
@@ -24,24 +26,16 @@ def recurse(n, memoDict):
     
     if n in memoDict:
         return memoDict[n]
-    
-    # if n is a power of 2, we can just get bits-1
-    elif isPow2(n):
-        memoDict[n] = int.bit_length(n) - 1
-        return memoDict[n]
-    
+
     # bitwise check for even
     elif n & 1 == 0:
         memoDict[n] = 1 + recurse(n >> 1, memoDict)
         return memoDict[n]
-
+    
     memoDict[n] = 1 + min(recurse(n - 1, memoDict), recurse(n + 1, memoDict))
     return memoDict[n]
 
-def isPow2(n):
-    return n > 0 and (n & (n - 1)) == 0
-
-tests = [(4, 2), (15, 5), (123456789 + 10 ** 220, 0)]
+tests = [(4, 2), (15, 5), (13, 5), (173, 11), (123456789 + 10 ** 300, 1242)]
 for test in tests:
     start = time()
     print(f'solution({test[0]}) = {solution(test[0])} (expected {test[1]}) -- {time() - start} seconds')
