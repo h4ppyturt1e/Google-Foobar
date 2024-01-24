@@ -7,22 +7,14 @@ def solution(start, length):
         return 0
     
     toBeXORed = []
-    original_length = length
-    cur = start
-    missed = 0
-    while missed != original_length:
-        for _ in range(length):
-            toBeXORed.append(cur)
-            cur += 1
-        
-        for _ in range(missed):
-            cur += 1
-
-        length -= 1
-        missed += 1
+    originalLength = length
+    for i in range(originalLength):
+        toBeXORed.extend(list(range(start, start + length - i)))
+        start += length
+        # length -= 1
     
     # XOR all the numbers in the list
-    print(toBeXORed)
+    # print(toBeXORed)
     res = reduce(lambda x, y: x ^ y, toBeXORed)
     
     return res
