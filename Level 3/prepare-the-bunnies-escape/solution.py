@@ -33,10 +33,10 @@ def getShortestPath(adjMatrixValid, start, end):
         at = prev[at]
     path.reverse()
 
-    return path
+    return path if path[0] == start else []
 
 def solution(maze):
-    adjMatrixValid, adjMatrixInvalid = generateAdjacencyMatrix(maze)
+    adjMatrixPath, adjMatrixWall, allWalls = generateAdjacencyMatrix(maze)
     start = (0, 0)
     end = (len(maze) - 1, len(maze[0]) - 1)
     # print(f'adjMatrixValid = {adjMatrixValid[(0, 0)]}')
@@ -45,44 +45,35 @@ def solution(maze):
     shortestSoln = []
     
     # get path to end
-    visited = getShortestPath(adjMatrixValid, start, end)
+    visited = getShortestPath(adjMatrixPath, start, end)
     
     # check if end is reachable
-    if (len(maze) - 1, len(maze[0]) - 1) in visited:
-        # print(visited)
-        # print('end is reachable')
-        if not (len(maze) > 1 and shortest == 1):
-            shortest = len(visited)
+    if start in visited and end in visited:
+        shortest = len(visited)
         shortestSoln = visited
-        print(f'shortestSoln ({shortest}) = {shortestSoln}')
+    #     print(f"Inital solution - {shortest} steps")
+    #     visualizeMaze(maze, shortestSoln)
+    # else:
+    #     print("No naive solution")
         
     # if able to break 1 wall, check all possible walls
-    if not visited:
-        visited = [start]
-    # print(f"visited = {visited}")
-    for node in visited:
-        # get surrounding invalid nodes
-        invalidNodes = adjMatrixInvalid[node]
-        # print(f'invalidNodes = {invalidNodes}')
+    for node in allWalls:
+        maze[node[0]][node[1]] = 0
+        adjMatrixPath, _, _ = generateAdjacencyMatrix(maze)
         
-        for wall in invalidNodes:
-            # remove wall
-            # print(f"removing wall at {wall} -> {node}")
-            adjMatrixValid[node][wall] = True
-            
-            # get path to end
-            visited = getShortestPath(adjMatrixValid, end, start)
-            
-            # check if end is reachable
-            if (len(maze) - 1, len(maze[0]) - 1) in visited:
-                # print(visited)
-                # print('end is reachable')
-                shortest = min(shortest, len(visited))
-                shortestSoln = visited
-            # replace wall
-            adjMatrixValid[wall][node] = False
+        # get path to end
+        visited = getShortestPath(adjMatrixPath, start, end)
+        
+        # check if end is reachable and if it's the shortest path
+        curlen = len(visited)
+        if start in visited and end in visited and curlen < shortest:
+            shortest = curlen
+            shortestSoln = visited
+            # print(f"1 Wall broken solution - {shortest} steps")
+            # visualizeMaze(maze, shortestSoln)
+
+        maze[node[0]][node[1]] = 1
     
-    visualizeMaze(maze, shortestSoln)
     return shortest
 
 def generateAdjacencyMatrix(maze):
@@ -91,7 +82,7 @@ def generateAdjacencyMatrix(maze):
     # True -> can move through, False -> can't move through
     
     adjMatrixAll = dict()
-    
+    allInvalids = []
     for i in range(len(maze)):
         for j in range(len(maze[0])):
             
@@ -107,10 +98,13 @@ def generateAdjacencyMatrix(maze):
                 moves.append(((i, j + 1), False if maze[i][j + 1] else True))
             
             adjMatrixAll[(i, j)] = moves
+            
+            # get all nodes with walls
+            if maze[i][j] == 1:
+                allInvalids.append((i, j))
     
     adjMatrixValid = dict()
     adjMatrixInvalid = dict()
-    
     for key in adjMatrixAll:
         # print(f'{key} -> {adjMatrixAll[key]}')
         validMoves, invalidMoves = {}, {}
@@ -123,8 +117,9 @@ def generateAdjacencyMatrix(maze):
         adjMatrixValid[key] = validMoves
         adjMatrixInvalid[key] = invalidMoves
         # print(f'{key} -> {adjMatrixValid[key]}')
+        # print(f'{key} -> {adjMatrixInvalid[key]}')
     
-    return adjMatrixValid, adjMatrixInvalid
+    return adjMatrixValid, adjMatrixInvalid, allInvalids
     
 
 def visualizeMaze(maze, visited):
@@ -191,9 +186,9 @@ tests = [([[0, 0, 0, 0, 0, 0],
            [1, 1, 0, 0], 
            [1, 1, 1, 0]], 7),
          
-         (maze1, 21),
-         (maze2, 39),
-         (maze3, 17)
+         (maze1, -1),
+         (maze2, -1),
+         (maze3, -1)
         ]
 
 for test in tests:
