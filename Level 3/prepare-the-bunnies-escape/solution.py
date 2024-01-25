@@ -28,10 +28,12 @@ def getShortestPath(adjMatrixValid, start, end):
     at = end
     while at is not None:
         path.append(at)
+        if at not in prev:
+            break
         at = prev[at]
     path.reverse()
 
-    return path if path[0] == start else []
+    return path
 
 def solution(maze):
     adjMatrixValid, adjMatrixInvalid = generateAdjacencyMatrix(maze)
@@ -49,10 +51,15 @@ def solution(maze):
     if (len(maze) - 1, len(maze[0]) - 1) in visited:
         # print(visited)
         # print('end is reachable')
-        shortest = len(visited)
+        if not (len(maze) > 1 and shortest == 1):
+            shortest = len(visited)
         shortestSoln = visited
+        print(f'shortestSoln ({shortest}) = {shortestSoln}')
         
     # if able to break 1 wall, check all possible walls
+    if not visited:
+        visited = [start]
+    # print(f"visited = {visited}")
     for node in visited:
         # get surrounding invalid nodes
         invalidNodes = adjMatrixInvalid[node]
@@ -64,7 +71,7 @@ def solution(maze):
             adjMatrixValid[node][wall] = True
             
             # get path to end
-            visited = getShortestPath(adjMatrixValid, start, end)
+            visited = getShortestPath(adjMatrixValid, end, start)
             
             # check if end is reachable
             if (len(maze) - 1, len(maze[0]) - 1) in visited:
@@ -75,7 +82,7 @@ def solution(maze):
             # replace wall
             adjMatrixValid[wall][node] = False
     
-    # visualizeMaze(maze, shortestSoln)
+    visualizeMaze(maze, shortestSoln)
     return shortest
 
 def generateAdjacencyMatrix(maze):
@@ -121,13 +128,56 @@ def generateAdjacencyMatrix(maze):
     
 
 def visualizeMaze(maze, visited):
+    print('+' + '-' * len(maze[0]) + '+')
     for i in range(len(maze)):
+        print('|', end='')
         for j in range(len(maze[0])):
             if (i, j) in visited:
                 print('X', end='')
             else:
-                print(maze[i][j], end='')
-        print()
+                if maze[i][j] == 0:
+                    print(' ', end='')
+                else:
+                    print('█', end='')
+        print('|')
+    print('+' + '-' * len(maze[0]) + '+')
+
+maze1 = [
+    [0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 1, 0, 1, 1, 1, 0, 1, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 0, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+    [1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
+    [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+]
+maze2 = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 1, 1, 1, 1, 1, 1, 0, 1, 0],
+    [0, 1, 0, 0, 0, 0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 1, 1, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+]
+maze3 = [
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+    [1, 1, 1, 1, 1, 0, 1, 0, 1, 0],
+    [0, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+    [1, 1, 1, 1, 1, 0, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+]
 
 tests = [([[0, 0, 0, 0, 0, 0], 
            [1, 0, 1, 1, 1, 0], 
@@ -139,11 +189,14 @@ tests = [([[0, 0, 0, 0, 0, 0],
          ([[0, 1, 1, 0], 
            [0, 0, 0, 1], 
            [1, 1, 0, 0], 
-           [1, 1, 1, 0]], 7)]
+           [1, 1, 1, 0]], 7),
+         
+         (maze1, 21),
+         (maze2, 39),
+         (maze3, 17)
+        ]
 
 for test in tests:
     start = time()
-    for line in test[0]:
-        print(line)
-        pass
+    visualizeMaze(test[0], [])
     print(f'solution() = {solution(test[0])} (expected {test[1]}) -- {time() - start} seconds')
