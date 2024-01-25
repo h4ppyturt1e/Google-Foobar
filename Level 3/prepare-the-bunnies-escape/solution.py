@@ -1,7 +1,9 @@
-from time import time
+from time import time, sleep
 from collections import deque
+# for live visualization
+from tkinter import Tk, Canvas, Frame, BOTH
 
-def getShortestPath(adjMatrixValid, start, end):
+def getShortestPath(maze, adjMatrixValid, start, end, root, canvas):
     # Queue for BFS
     queue = deque([start])
     # Track visited nodes
@@ -21,6 +23,7 @@ def getShortestPath(adjMatrixValid, start, end):
             if neighbor not in visited:
                 queue.append(neighbor)
                 visited.add(neighbor)
+                drawMaze(maze, visited, root, canvas)
                 prev[neighbor] = node
 
     # Reconstruct the shortest path
@@ -35,7 +38,7 @@ def getShortestPath(adjMatrixValid, start, end):
 
     return path if path[0] == start else []
 
-def solution(maze):
+def solution(maze, root, canvas):
     adjMatrixPath, adjMatrixWall, allWalls = generateAdjacencyMatrix(maze)
     start = (0, 0)
     end = (len(maze) - 1, len(maze[0]) - 1)
@@ -45,7 +48,7 @@ def solution(maze):
     shortestSoln = []
     
     # get path to end
-    visited = getShortestPath(adjMatrixPath, start, end)
+    visited = getShortestPath(maze, adjMatrixPath, start, end, root, canvas)
     
     # check if end is reachable
     if start in visited and end in visited:
@@ -62,7 +65,7 @@ def solution(maze):
         adjMatrixPath, _, _ = generateAdjacencyMatrix(maze)
         
         # get path to end
-        visited = getShortestPath(adjMatrixPath, start, end)
+        visited = getShortestPath(maze, adjMatrixPath, start, end, root, canvas)
         
         # check if end is reachable and if it's the shortest path
         curlen = len(visited)
@@ -74,6 +77,7 @@ def solution(maze):
 
         maze[node[0]][node[1]] = 1
     
+    drawMaze(maze, shortestSoln, root, canvas)
     return shortest
 
 def generateAdjacencyMatrix(maze):
@@ -137,6 +141,19 @@ def visualizeMaze(maze, visited):
         print('|')
     print('+' + '-' * len(maze[0]) + '+')
 
+def drawMaze(maze, visited, root, canvas, delay=0.00):
+    # make delay inversely proportional to maze size
+    mazeSize = len(maze) * len(maze[0])
+    # delay = delay = 0.1 * (mazeSize ** -0.5)
+    blockSize = 50
+    canvas.delete("all")  # Clear the canvas
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            color = 'red' if (i, j) in visited else 'white' if maze[i][j] == 0 else 'black'
+            canvas.create_rectangle(j * blockSize, i * blockSize, j * blockSize + blockSize, i * blockSize + blockSize, fill=color)
+    root.update()  # Update the window
+    sleep(delay)
+
 maze1 = [
     [0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
     [0, 1, 0, 1, 1, 1, 0, 1, 0, 1],
@@ -192,6 +209,15 @@ tests = [([[0, 0, 0, 0, 0, 0],
         ]
 
 for test in tests:
+    maze = test[0]
     start = time()
-    visualizeMaze(test[0], [])
-    print(f'solution() = {solution(test[0])} (expected {test[1]}) -- {time() - start} seconds')
+    root = Tk()
+    root.title("Maze")
+    root.geometry(f"{len(maze[0]) * 50}x{len(maze) * 50}")
+    canvas = Canvas(root)
+    canvas.pack(fill=BOTH, expand=1)
+    # visualizeMaze(maze, [])
+    print(f'solution() = {solution(maze, root, canvas)} (expected {test[1]}) -- {time() - start} seconds')
+
+# to keep the windows open
+input()
