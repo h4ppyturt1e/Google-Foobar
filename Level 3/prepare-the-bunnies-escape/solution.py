@@ -2,26 +2,33 @@ from time import time, sleep
 from collections import deque
 # for live visualization
 from tkinter import Tk, Canvas, Frame, BOTH
+from math import sqrt
 
 def getShortestPath(maze, adjMatrixValid, start, end, root, canvas):
-    # Queue for BFS
-    queue = deque([start])
+    # Queue for A* search
+    queue = [(0, start)]
     # Track visited nodes
     visited = set()
     visited.add(start)
     # Track the previous node for each visited node
     prev = {start: None}
+    # Track the cost to reach each node
+    cost = {start: 0}
 
-    # BFS
+    # A* search
     while queue:
-        node = queue.popleft()
+        _, node = min(queue)
+        queue.remove((_, node))
         # Stop if the end node is reached
         if node == end:
             break
         # Add unvisited neighbors to the queue
         for neighbor in adjMatrixValid[node]:
-            if neighbor not in visited:
-                queue.append(neighbor)
+            new_cost = cost[node] + 1
+            if neighbor not in cost or new_cost < cost[neighbor]:
+                cost[neighbor] = new_cost
+                priority = new_cost + straight_line_distance(neighbor, end)
+                queue.append((priority, neighbor))
                 visited.add(neighbor)
                 drawMaze(maze, visited, root, canvas)
                 prev[neighbor] = node
@@ -37,6 +44,11 @@ def getShortestPath(maze, adjMatrixValid, start, end, root, canvas):
     path.reverse()
 
     return path if path[0] == start else []
+
+def straight_line_distance(node1, node2):
+    x1, y1 = node1
+    x2, y2 = node2
+    return sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 def solution(maze, root, canvas):
     adjMatrixPath, adjMatrixWall, allWalls = generateAdjacencyMatrix(maze)
